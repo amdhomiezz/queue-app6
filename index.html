@@ -1,0 +1,2433 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CA033 : Squid Game</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- เพิ่ม Font Awesome สำหรับไอคอน -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start; /* จัดให้อยู่ด้านบนเพื่อเหลือพื้นที่สำหรับการเลื่อน */
+            min-height: 100vh;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .container {
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            max-width: 800px; /* เพิ่มความกว้างสำหรับตารางรายงาน */
+            width: 100%;
+            text-align: center;
+        }
+        input {
+            border-radius: 8px;
+            padding: 12px 18px;
+            font-size: 1rem;
+            width: 100%;
+            box-sizing: border-box;
+            margin-bottom: 15px;
+            border: 2px solid #d1d5db; /* A slightly darker gray for general inputs */
+            height: 48px; /* Fixed height for inputs */
+        }
+        /* Custom placeholder color */
+        input::placeholder {
+            color: #9ca3af; /* A lighter grey for placeholders */
+        }
+
+        button {
+            border-radius: 8px;
+            padding: 12px 18px;
+            font-size: 1rem;
+            width: 100%;
+            box-sizing: border-box;
+            margin-bottom: 15px;
+            /* Default button styles - overridden by specific Tailwind classes on registerButton */
+            background-color: #34d399; /* Softer green (emerald-500) */
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            font-weight: 600;
+        }
+        button:hover {
+            background-color: #10b981; /* Darker emerald on hover (emerald-600) */
+        }
+        /* เพิ่มสไตล์สำหรับปุ่มที่ถูกปิดใช้งาน */
+        button:disabled {
+            background-color: #a0a0a0;
+            cursor: not-allowed;
+        }
+        .message-box {
+            background-color: #f2f7ff;
+            color: #3b82f6;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            font-size: 1.1rem;
+            font-weight: 500;
+            text-align: left;
+        }
+        /* New style for the container of the highlighted success message */
+        .highlight-success-message {
+            background-color: transparent !important; /* Override default message-box background */
+            text-align: center !important; /* Center the message */
+            padding: 0 !important; /* Remove padding for a tighter look */
+            display: flex; /* Use flexbox to align content within the message */
+            flex-direction: column; /* Stack text and number vertically */
+            align-items: center; /* Center horizontally */
+            justify-content: center; /* Center vertically if container has height */
+            min-height: 100px; /* Ensure enough height for large number */
+        }
+        /* New style for the text part of the highlighted success message */
+        .queue-text {
+            font-size: 2.5rem; /* Reduced size for the descriptive text (text-4xl equivalent) */
+            font-weight: 700; /* Bold */
+            color: #dc2626; /* red-600 */
+            display: block; /* Ensure it takes full width and number goes below */
+            margin-bottom: 0.5rem; /* Small space between text and number */
+            line-height: 1.2; /* Adjust line height for better spacing */
+        }
+        /* New style for the large queue number itself */
+        .queue-number-display {
+            font-size: 6rem; /* Large size for the number (text-8xl equivalent) */
+            font-weight: 700; /* Bold */
+            color: #dc2626; /* red-600 */
+            line-height: 1; /* Tighter line height for the number */
+        }
+
+        .error-message {
+            background-color: #fee2e2;
+            color: #ef4444;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            font-size: 1.1rem;
+            font-weight: 500;
+            text-align: left;
+        }
+        /* Style for smaller password error message */
+        .password-error-message {
+            color: #ef4444;
+            font-size: 0.8rem; /* Smaller font size */
+            margin-top: 5px; /* Small margin below input */
+            text-align: left;
+        }
+        .loading-indicator {
+            display: none; /* ซ่อนไว้ตามค่าเริ่มต้น */
+            margin-top: 20px;
+            font-size: 0.9rem;
+            color: #6b7280;
+        }
+        .current-queue-info {
+            margin-top: 25px;
+            padding: 20px;
+            background-color: #ecfdf5;
+            border: 1px solid #d1fae5;
+            border-radius: 10px;
+            /* font-size for this specific p tag is set below in HTML to text-2xl */
+            font-weight: 500;
+            color: #047857;
+            /* Initially hidden for student view */
+            display: none;
+        }
+        .report-section {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #e0e0e0;
+            text-align: left;
+        }
+        .report-table {
+            width: 100%;
+            /* max-width: 350px; No longer needed as width is controlled by column layout */
+            border-collapse: collapse;
+            font-size: 0.85rem; /* Reduced font size */
+        }
+        .report-table th, .report-table td {
+            border: 1px solid #e0e0e0;
+            padding: 8px; /* Reduced padding */
+            text-align: left;
+        }
+        .report-table th {
+            background-color: #f8f8f8;
+            font-weight: 600;
+            color: #333;
+        }
+        .report-table tbody tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        .report-table tbody tr:hover {
+            background-color: #f0f0f0;
+        }
+        .no-data-message {
+            text-align: center;
+            color: #6b7280;
+            margin-top: 20px;
+        }
+        .report-loading-indicator {
+            display: none; /* ซ่อนไว้ตามค่าเริ่มต้น */
+            margin-top: 20px;
+            font-size: 0.9rem;
+            color: #6b7280;
+        }
+        /* Admin Section (moved and restyled) */
+        .admin-section { /* This class is now largely decorative for the h2 inside */
+            /* No longer a distinct visual block, content is minimal */
+            margin-top: 30px; /* Kept for general spacing from report section */
+            padding-top: 20px;
+            border-top: 1px solid #e0e0e0;
+            text-align: left;
+            /* Removed background and border specific to its previous block style */
+        }
+        /* Custom Modal Styles (for confirmation) */
+        .modal {
+            display: none; /* Hidden by default */
+            position: fixed; /* Stay in place */
+            z-index: 1000; /* Sit on top */
+            left: 0;
+            top: 0;
+            width: 100%; /* Full width */
+            height: 100%; /* Full height */
+            overflow: auto; /* Enable scroll if needed */
+            background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: auto;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            width: 80%;
+            max-width: 400px;
+            text-align: center;
+        }
+        .modal-buttons {
+            margin-top: 20px;
+        }
+        .modal-buttons button {
+            width: auto;
+            display: inline-block;
+            margin: 0 10px;
+            padding: 10px 20px;
+        }
+
+        /* Styles for the new floating admin panel */
+        #adminPanelContainer {
+            position: fixed;
+            bottom: 20px;
+            left: 80px; /* Adjusted position to be slightly to the right of toggle button */
+            z-index: 998; /* Below the toggle button, but above content */
+            background-color: #fffbeb;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            display: none; /* Controlled by JS now: Initially hidden */
+            flex-direction: column;
+            gap: 10px; /* Space between elements */
+            width: 200px; /* Small width */
+            transition: transform 0.3s ease-out, opacity 0.3s ease-out, visibility 0.3s ease-out;
+            transform: translateY(0); /* Start position */
+            opacity: 1; /* Always visible opacity when display is not 'none' */
+            visibility: visible; /* Always visible when display is not 'none' */
+        }
+
+        .admin-password-input {
+            padding: 8px 12px; /* Smaller padding */
+            font-size: 0.9rem; /* Smaller font */
+            margin-bottom: 0; /* No margin bottom here, handled by gap */
+            width: 100%; /* Ensure it takes full width of its container */
+            box-sizing: border-box; /* Include padding/border in width */
+        }
+        .admin-section-content { /* This class is now used only for the import modal content */
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid #e0e0e0;
+            text-align: left;
+        }
+        .admin-section-content textarea {
+            width: 100%;
+            padding: 8px;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+            font-size: 0.9rem;
+            min-height: 80px;
+            margin-top: 10px;
+            margin-bottom: 10px;
+            box-sizing: border-box;
+        }
+        .admin-section-content button {
+            width: auto;
+            padding: 8px 15px;
+            font-size: 0.9rem;
+            margin-top: 0;
+            margin-bottom: 0;
+        }
+
+        /* The hidden reset trigger style - not an actual button now */
+        .admin-execute-reset-trigger {
+            display: none; /* This is just a conceptual placeholder now, not a visible button */
+        }
+
+
+        /* Unified style for floating icon buttons - general appearance */
+        .floating-icon-button {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.25rem;
+            color: #fff; /* Default white icon */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            transition: background-color 0.3s ease, transform 0.2s ease; /* Removed opacity/visibility from transition here */
+        }
+        .floating-icon-button:hover {
+            transform: translateY(-2px); /* Slight lift effect on hover for all */
+        }
+
+        /* Specific positioning and initial hiding for button containers */
+        #fixedAdminToggleButtonContainer {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            z-index: 999;
+            display: flex; /* Always flex for layout */
+            opacity: 1; /* Always visible */
+            visibility: visible; /* Always visible */
+            pointer-events: auto; /* Always interactive */
+            transition: opacity 0.3s ease, visibility 0.3s ease; /* Keep transition for smooth hiding on mobile */
+        }
+
+        /* Media query for mobile (small screens): hide completely */
+        @media (max-width: 767px) {
+            #fixedAdminToggleButtonContainer {
+                display: none; /* Override flex, hide completely on mobile */
+            }
+        }
+
+        #adminLoginStatusMessage {
+            position: fixed; /* Fixed position on screen */
+            bottom: 80px; /* Adjust based on button position, higher than the button */
+            left: 20px; /* Align with the button */
+            padding: 8px 12px;
+            background-color: #d1fae5; /* light green for success */
+            color: #065f46; /* dark green */
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            font-size: 0.9rem;
+            font-weight: 500;
+            z-index: 1001; /* Ensure it's above other elements */
+            opacity: 0; /* Start hidden */
+            visibility: hidden; /* Start hidden */
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+            pointer-events: none; /* Make it not interfere with clicks */
+            white-space: nowrap; /* Prevent text wrapping */
+        }
+        #adminLoginStatusMessage.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* New Floating Import Button (Import Icon) */
+        #fixedImportButtonContainer { 
+            position: fixed;
+            bottom: 20px;
+            left: 80px; /* Positioned next to admin toggle button */
+            z-index: 999;
+            display: none; /* Hidden by default, shown by JS */
+        }
+        #toggleImportIdsButton { /* Specific style for Import button */
+            background-color: #10b981; /* Green color for import */
+            color: #fff;
+        }
+        #toggleImportIdsButton:hover {
+            background-color: #059669; /* Darker green on hover */
+        }
+
+        #fixedViewPreRegButtonContainer { /* New View Pre-reg button container */
+            position: fixed;
+            bottom: 20px;
+            left: 140px; /* Positioned to the right of Import button */
+            z-index: 999;
+            display: none; /* Hidden by default, shown by JS */
+        }
+        #toggleViewPreRegButton { /* Specific style for View Pre-reg button */
+            background-color: #3b82f6; /* Blue color for view */
+            color: #fff;
+        }
+        #toggleViewPreRegButton:hover {
+            background-color: #2563eb; /* Darker blue on hover */
+        }
+
+        /* New Floating Daily Report Button */
+        #fixedDailyReportButtonContainer {
+            position: fixed;
+            bottom: 20px;
+            left: 200px; /* Positioned to the right of View Pre-reg button */
+            z-index: 999;
+            display: none; /* Hidden by default, shown by JS */
+        }
+        #toggleDailyReportButton { /* Specific style for Daily Report button */
+            background-color: #f59e0b; /* Amber for report */
+            color: #fff;
+        }
+        #toggleDailyReportButton:hover {
+            background-color: #d97706; /* Darker amber on hover */
+        }
+
+        /* New Floating Toggle Form Button */
+        #fixedToggleFormButtonContainer {
+            position: fixed;
+            bottom: 20px;
+            left: 260px; /* Positioned to the right of Daily Report button */
+            z-index: 999;
+            display: none; /* Hidden by default, shown by JS */
+        }
+        #toggleFormVisibilityButton { /* Specific style for Toggle Form button */
+            background-color: #6d28d9; /* Deep Purple */
+            color: #fff;
+        }
+        #toggleFormVisibilityButton:hover {
+            background-color: #5b21b6; /* Darker Purple on hover */
+        }
+
+
+        #fixedResetButtonContainer {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 999;
+            display: none; /* Hidden by default, shown by JS */
+        }
+        #resetQueueButton { /* Specific style for Smiling Face button */
+            background-color: #ef4444; /* Red color for delete/reset */
+            color: #fff;
+        }
+        #resetQueueButton:hover {
+            background-color: #dc2626; /* Darker red on hover */
+        }
+
+        /* Styles for the pre-registered IDs table in modal */
+        #preRegisteredIdsTableContainer {
+            max-height: 400px; /* Limit height for scroll */
+            overflow-y: auto; /* Add scroll if content overflows */
+            margin-top: 15px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+        }
+        #preRegisteredIdsTable {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+        }
+        #preRegisteredIdsTable th,
+        #preRegisteredIdsTable td {
+            border: 1px solid #e0e0e0;
+            padding: 8px;
+            text-align: left;
+            vertical-align: middle; /* Align content vertically */
+        }
+        #preRegisteredIdsTable th {
+            background-color: #f8f8f8;
+            font-weight: 600;
+        }
+        .report-table tbody tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        .report-table tbody tr:hover {
+            background-color: #f0f0f0;
+        }
+        #preRegisteredIdsTable td.actions { /* Re-added actions cell style */
+            white-space: nowrap;
+            text-align: center;
+        }
+        #preRegisteredIdsTable td.actions button { /* Re-added button style */
+            width: 32px;
+            height: 32px;
+            padding: 0;
+            font-size: 0.9rem;
+            margin: 0 4px;
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+        }
+        #deleteSelectedPreRegisteredIdsButton,
+        #clearAllPreRegisteredIdsButton {
+            margin-top: 20px;
+            background-color: #dc2626; /* Red */
+            color: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            width: auto; /* Allow button to size based on content */
+            display: inline-block;
+            font-size: 0.9rem;
+        }
+        #deleteSelectedPreRegisteredIdsButton:hover,
+        #clearAllPreRegisteredIdsButton:hover {
+            background-color: #b91c1c;
+        }
+        #preRegSummary {
+            text-align: left;
+            margin-top: 10px;
+            font-weight: 500;
+            color: #4a5568;
+        }
+        /* Increased z-index for confirmationModal to ensure it appears on top */
+        #confirmationModal {
+            z-index: 2000;
+        }
+
+        /* New styles for form open/closed states */
+        .form-closed-overlay {
+            opacity: 0.5; /* Dim the form */
+            pointer-events: none; /* Disable all clicks/interactions */
+        }
+        .form-status-message {
+            background-color: #fef08a; /* Yellow-200 */
+            color: #b45309; /* Amber-700 */
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            font-size: 1.1rem;
+            font-weight: 500;
+            text-align: center;
+            display: none; /* Hidden by default */
+        }
+        /* Styles for text input in confirmation modal */
+        #confirmationTextInput {
+            width: 100%;
+            padding: 10px;
+            margin-top: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 1rem;
+            text-align: center; /* Center the text for typing confirmation */
+            box-sizing: border-box; /* Include padding in width */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- New Headline -->
+        <p class="text-2xl font-bold text-gray-700 mb-2">CA033 : Idea Generation Workshop and Agile Management</p>
+        <h1 class="text-4xl font-extrabold text-gray-800 mb-6">ระบบแจกหมายเลขผู้เรียน</h1>
+        
+        <!-- Form status message -->
+        <div id="formStatusMessage" class="form-status-message">
+            การลงทะเบียนปิดอยู่ โปรดรอการเปิดรอบถัดไป
+        </div>
+
+        <!-- Student form container to toggle visibility/interaction -->
+        <div id="studentFormContainer">
+            <p class="text-xl font-bold text-gray-600 mb-2">กรอกรหัสนักศึกษา และตอบคำถามประจำวัน</p>
+            <p class="text-gray-600 mb-6 text-sm">เพื่อรับหมายเลขประจำตัวผู้เรียนประจำวันนี้ เพื่อใช้ในการทำ Workshop</p>
+
+            <!-- Input fields section: student ID and daily answer -->
+            <div class="mb-4 flex flex-wrap -mx-2 items-end">
+                <!-- Student ID input (left column) -->
+                <div class="w-full md:w-1/2 px-2 mb-4 md:mb-0"> <!-- Added mb-4 for vertical spacing -->
+                    <label for="studentIdInput" class="block text-blue-700 text-lg font-bold mb-2">รหัสนักศึกษา:</label>
+                    <input type="text" id="studentIdInput" placeholder="กรอกรหัสนักศึกษา เช่น 1660312345" class="focus:ring-2 focus:ring-green-300 focus:border-green-500 border-2 border-gray-400 placeholder-gray-400">
+                </div>
+                <!-- Daily Question/Answer input (right column) -->
+                <div class="w-full md:w-1/2 px-2">
+                    <label for="dailyAnswerInput" class="block text-blue-700 text-lg font-bold mb-2">คำถามประจำวันนี้?:</label>
+                    <input type="text" id="dailyAnswerInput" placeholder="กรอกคำตอบ" class="focus:ring-2 focus:ring-green-300 focus:border-green-500 border-2 border-gray-400 placeholder-gray-400">
+                </div>
+            </div>
+
+            <button id="registerButton" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:-translate-y-1 md:py-2 md:px-4 md:text-base" disabled>
+                ลงทะเบียนรับหมายเลขผู้เรียนประจำวัน
+            </button>
+        </div>
+        
+
+        <div id="messageDisplay" class="message-box hidden">
+            <!-- ข้อความจะแสดงที่นี่ -->
+        </div>
+        <div id="errorDisplay" class="error-message hidden">
+            <!-- ข้อผิดพลาดจะแสดงที่นี่ -->
+        </div>
+        <div id="loadingIndicator" class="loading-indicator">
+            กำลังประมวลผล... โปรดรอสักครู่
+        </div>
+
+        <!-- ส่วนสำหรับรายงานการลงทะเบียน - ซ่อนตารางและจะแสดงเมื่อผู้ดูแลระบบกดปุ่มเท่านั้น -->
+        <div id="reportSection" class="report-section" style="display: none;">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">สรุปหมายเลขผู้เรียนประจำรอบ</h2>
+            
+            <div class="mb-4 flex items-center justify-center space-x-4">
+                <label for="sessionSelect" class="font-semibold text-gray-700">เลือกรอบรายงาน:</label>
+                <select id="sessionSelect" class="p-2 border rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                    <!-- Options will be populated by JavaScript -->
+                </select>
+            </div>
+
+            <div id="reportLoadingIndicator" class="report-loading-indicator">
+                กำลังโหลดรายงาน...
+            </div>
+            <div id="registrationReport" class="mt-4 flex flex-wrap -mx-2">
+                <div id="leftTableContainer" class="w-full md:w-1/2 px-2"></div>
+                <div id="rightTableContainer" class="w-full md:w-1/2 px-2"></div>
+                <p id="noReportDataMessage" class="no-data-message hidden w-full px-2">ยังไม่มีข้อมูลการลงทะเบียนสำหรับวันนี้</p>
+            </div>
+            <div class="mt-4 flex flex-wrap justify-center items-center gap-3">
+                <button id="closeDailyReportButton" class="bg-gray-400 hover:bg-gray-500 text-white py-1.5 px-3 rounded-lg text-sm w-auto">ปิดรายงาน</button>
+                <button id="exportReportButton" class="bg-amber-500 hover:bg-amber-600 text-white py-1.5 px-3 rounded-lg text-sm w-auto">Export</button>
+                <button id="deleteReportButton" class="bg-red-600 hover:bg-red-700 text-white py-1.5 px-3 rounded-lg text-sm w-auto">ลบรายงานนี้</button>
+            </div>
+        </div>
+
+
+        <!-- Moved here: Display of current registered students -->
+        <!-- Hidden by default. Only visible to admin when daily report is opened. -->
+        <div id="currentQueueInfo" class="current-queue-info">
+            <p class="text-2xl font-bold text-green-700">จำนวนนักศึกษาที่รับคิวแล้วรอบนี้: <span id="highestQueueNumberDisplay" class="font-bold text-green-700">--</span></p>
+        </div>
+
+
+        <!-- ส่วนควบคุมสำหรับผู้ดูแลระบบ (Placeholder for previous admin section) -->
+        <div class="admin-section">
+        </div>
+    </div>
+
+    <!-- Custom Confirmation Modal (For Reset and Delete Report) -->
+    <div id="confirmationModal" class="modal">
+        <div class="modal-content">
+            <p id="confirmationModalMessage" class="text-lg font-semibold mb-4">ต้องการดำเนินการต่อ?</p>
+            <input type="text" id="confirmationTextInput" class="hidden" placeholder="พิมพ์ 'ยืนยันการลบ' เพื่อดำเนินการ">
+            <span id="confirmationTextError" class="password-error-message hidden"></span>
+            <div class="modal-buttons">
+                <button id="confirmActionButton" class="bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded-lg">ยืนยัน</button>
+                <button id="cancelActionButton" class="bg-gray-400 hover:bg-gray-500 text-white py-2 px-4 rounded-lg">ยกเลิก</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Floating Admin Panel (now with email and password for Firebase Auth) -->
+    <div id="adminPanelContainer">
+        <label for="adminEmailInput" class="block text-gray-700 text-sm font-semibold mb-1 text-left">Admin Email:</label>
+        <input type="email" id="adminEmailInput" placeholder="admin@example.com" class="admin-password-input mb-2 focus:ring-2 focus:ring-yellow-300 focus:border-transparent">
+        
+        <label for="adminPasswordInput" class="block text-gray-700 text-sm font-semibold mb-1 text-left">Password:</label>
+        <input type="password" id="adminPasswordInput" placeholder="กรอกรหัสผ่าน" class="admin-password-input focus:ring-2 focus:ring-yellow-300 focus:border-transparent">
+        <span id="passwordErrorDisplay" class="password-error-message hidden"></span>
+    </div>
+
+    <!-- New Modal for Importing Student IDs -->
+    <div id="importStudentIdsModal" class="modal">
+        <div class="modal-content">
+            <h3 class="text-xl font-semibold text-gray-700 mb-2">การจัดการรหัสนักศึกษา</h3>
+            <p class="text-xs text-gray-500 mb-2">กรอกรหัสนักศึกษา 10 หลักคั่นด้วยคอมมา หรือขึ้นบรรทัดใหม่</p>
+            <textarea id="preRegisteredIdsTextareaModal" placeholder="เช่น 1234567890, 1650300000;1660300000"></textarea>
+            <div class="modal-buttons">
+                <button id="confirmImportIdsButton" class="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg">ยืนยันนำเข้ารายชื่อ</button>
+                <button id="cancelImportIdsButton" class="bg-gray-400 hover:bg-gray-500 text-white py-2 px-4 rounded-lg">ยกเลิก</button>
+            </div>
+            <span id="preRegSaveErrorDisplayModal" class="password-error-message hidden"></span>
+        </div>
+    </div>
+
+    <!-- New Modal for Viewing/Managing Pre-registered Student IDs -->
+    <div id="viewPreRegisteredIdsModal" class="modal">
+        <div class="modal-content !max-w-xl"> <!-- Increased max-width for better table display -->
+            <h3 class="text-xl font-semibold text-gray-700 mb-2">รหัสนักศึกษาทั้งหมด</h3>
+            <!-- Search Input for Pre-registered IDs -->
+            <input type="text" id="preRegSearchInput" placeholder="ค้นหารหัสนักศึกษา..." class="p-2 border rounded-md w-full mb-4 focus:ring-blue-500 focus:border-blue-500">
+            
+            <p id="preRegSummary" class="text-sm text-gray-600 mb-4">จำนวนนักศึกษาทั้งหมด: <span id="totalPreRegisteredStudents">0</span></p>
+            <div id="preRegisteredIdsTableContainer">
+                <table id="preRegisteredIdsTable">
+                    <thead>
+                        <tr>
+                            <th class="w-1/12"><input type="checkbox" id="selectAllPreRegIds"></th> 
+                            <th>รหัสนักศึกษา</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Data will be inserted here by JavaScript -->
+                    </tbody>
+                </table>
+                <p id="noPreRegDataMessage" class="no-data-message hidden">ยังไม่มีรายชื่อนักศึกษาที่ลงทะเบียนล่วงหน้า</p>
+            </div>
+            <div class="modal-buttons">
+                <button id="deleteSelectedPreRegisteredIdsButton" class="bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded-lg" disabled>ลบรายการที่เลือก</button> 
+                <button id="closeViewPreRegModalButton" class="bg-gray-400 hover:bg-gray-500 text-white py-2 px-4 rounded-lg">ปิด</button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Floating Toggle Button (Question Mark Icon) -->
+    <div id="fixedAdminToggleButtonContainer">
+        <button id="toggleAdminPanelButton" class="floating-icon-button">
+            <i class="fas fa-question-circle"></i> <!-- Icon for question mark -->
+        </button>
+    </div>
+
+    <!-- New Admin Login Status Message -->
+    <div id="adminLoginStatusMessage" class="hidden"></div>
+
+
+    <!-- New Floating Import Button (Import Icon) -->
+    <div id="fixedImportButtonContainer">
+        <button id="toggleImportIdsButton" class="floating-icon-button">
+            <i class="fas fa-file-import"></i> <!-- Icon for import -->
+        </button>
+    </div>
+
+    <!-- New Floating View Pre-registered Button (Users Icon) -->
+    <div id="fixedViewPreRegButtonContainer">
+        <button id="toggleViewPreRegButton" class="floating-icon-button">
+            <i class="fas fa-users"></i> <!-- Icon for users/list -->
+        </button>
+    </div>
+
+    <!-- New Floating Daily Report Button (Bar Chart Icon) -->
+    <div id="fixedDailyReportButtonContainer">
+        <button id="toggleDailyReportButton" class="floating-icon-button">
+            <i class="fas fa-chart-bar"></i> <!-- Icon for chart/report -->
+        </button>
+    </div>
+
+    <!-- New Floating Toggle Form Button -->
+    <div id="fixedToggleFormButtonContainer">
+        <button id="toggleFormVisibilityButton" class="floating-icon-button" title="สลับสถานะเปิด/ปิดฟอร์ม">
+            <i class="fas fa-lock-open"></i> <!-- Default icon: Open lock -->
+        </button>
+    </div>
+
+
+    <!-- New Floating Reset Button (Smiling Face Icon) -->
+    <div id="fixedResetButtonContainer">
+        <button id="resetQueueButton" class="floating-icon-button">
+            <i class="fas fa-smile"></i> <!-- Icon for smile -->
+        </button>
+    </div>
+
+
+    <script type="module">
+        // Import Firebase modules
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, collection, query, where, addDoc, serverTimestamp, getDocs, deleteDoc, writeBatch, runTransaction } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-analytics.js";
+
+        // MANDATORY: Use __firebase_config from the Canvas environment
+const firebaseConfig = {
+  apiKey: "AIzaSyBuWyZnn-4SSWelTOwE_vfRrMAHu_E_ZXU",
+  authDomain: "queue-app6.firebaseapp.com",
+  projectId: "queue-app6",
+  storageBucket: "queue-app6.firebasestorage.app",
+  messagingSenderId: "76650016652",
+  appId: "1:76650016652:web:abf66e8fa890d7d90970a9",
+  measurementId: "G-77KKDD55JR"
+};
+
+        // MANDATORY: Use __app_id for the app ID
+        const appId = typeof __app_id !== 'undefined' ? __app_id : firebaseConfig.projectId; // Fallback to projectId if __app_id is not defined
+
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+        const analytics = getAnalytics(app); // If you don't need Analytics, you can remove this line
+
+        // UI elements
+        const studentIdInput = document.getElementById('studentIdInput');
+        const dailyAnswerInput = document.getElementById('dailyAnswerInput'); // Get the new daily answer input
+        const registerButton = document.getElementById('registerButton');
+        const messageDisplay = document.getElementById('messageDisplay');
+        const errorDisplay = document.getElementById('errorDisplay');
+        const loadingIndicator = document.getElementById('loadingIndicator');
+        const highestQueueNumberDisplay = document.getElementById('highestQueueNumberDisplay');
+        const reportSection = document.getElementById('reportSection'); // The main div for the report
+        const registrationReportDiv = document.getElementById('registrationReport'); // The div containing the tables
+        const noReportDataMessage = document.getElementById('noReportDataMessage');
+        const reportLoadingIndicator = document.getElementById('reportLoadingIndicator');
+        const closeDailyReportButton = document.getElementById('closeDailyReportButton'); // New close button
+        const deleteReportButton = document.getElementById('deleteReportButton'); // NEW: Delete Report Button
+        const currentQueueInfoDiv = document.getElementById('currentQueueInfo'); // Reference to the queue info div
+        const sessionSelect = document.getElementById('sessionSelect'); // New dropdown for sessions
+        const exportReportButton = document.getElementById('exportReportButton'); // NEW: Export button in report section
+
+        // NEW UI elements for form open/close
+        const studentFormContainer = document.getElementById('studentFormContainer');
+        const formStatusMessage = document.getElementById('formStatusMessage');
+        const toggleFormVisibilityButton = document.getElementById('toggleFormVisibilityButton');
+        const toggleFormVisibilityButtonIcon = toggleFormVisibilityButton.querySelector('i'); // Get the icon
+
+        // Admin UI elements
+        const adminPanelContainer = document.getElementById('adminPanelContainer');
+        const toggleAdminPanelButton = document.getElementById('toggleAdminPanelButton'); // Get the question mark button
+        const toggleImportIdsButton = document.getElementById('toggleImportIdsButton'); // New: Import button
+        const toggleViewPreRegButton = document.getElementById('toggleViewPreRegButton'); // New: View Pre-reg button
+        const toggleDailyReportButton = document.getElementById('toggleDailyReportButton'); // New: Daily Report button
+        const adminEmailInput = document.getElementById('adminEmailInput'); // NEW: Admin Email Input
+        const adminPasswordInput = document.getElementById('adminPasswordInput');
+        const passwordErrorDisplay = document.getElementById('passwordErrorDisplay');
+        const resetQueueButton = document.getElementById('resetQueueButton');
+        const adminLoginStatusMessage = document.getElementById('adminLoginStatusMessage'); // New element
+
+        // Import Modal elements
+        const importStudentIdsModal = document.getElementById('importStudentIdsModal');
+        const preRegisteredIdsTextareaModal = document.getElementById('preRegisteredIdsTextareaModal');
+        const confirmImportIdsButton = document.getElementById('confirmImportIdsButton');
+        const cancelImportIdsButton = document.getElementById('cancelImportIdsButton');
+        const preRegSaveErrorDisplayModal = document.getElementById('preRegSaveErrorDisplayModal');
+
+        // View/Manage Pre-registered IDs Modal elements
+        const viewPreRegisteredIdsModal = document.getElementById('viewPreRegisteredIdsModal');
+        const preRegSummary = document.getElementById('preRegSummary');
+        const totalPreRegisteredStudentsSpan = document.getElementById('totalPreRegisteredStudents');
+        const preRegisteredIdsTable = document.getElementById('preRegisteredIdsTable');
+        const preRegisteredIdsTableBody = preRegisteredIdsTable.querySelector('tbody');
+        const noPreRegDataMessagePreReg = document.getElementById('noPreRegDataMessage'); // Renamed to avoid clash
+        const selectAllPreRegIdsCheckbox = document.getElementById('selectAllPreRegIds'); // Re-added
+        const deleteSelectedPreRegisteredIdsButton = document.getElementById('deleteSelectedPreRegisteredIdsButton'); // Re-added
+        const closeViewPreRegModalButton = document.getElementById('closeViewPreRegModalButton');
+        const preRegSearchInput = document.getElementById('preRegSearchInput'); // NEW: Search input for pre-registered IDs
+
+        // General Confirmation Modal elements (reused for reset, single delete, multi-delete, clear all)
+        const confirmationModal = document.getElementById('confirmationModal');
+        const confirmationModalMessage = document.getElementById('confirmationModalMessage');
+        const confirmationTextInput = document.getElementById('confirmationTextInput'); // NEW
+        const confirmationTextError = document.getElementById('confirmationTextError');   // NEW
+        const confirmActionButton = document.getElementById('confirmActionButton');
+        const cancelActionButton = document.getElementById('cancelActionButton');
+
+
+        // Admin UIDs (This is specific to your admin users created in Firebase Authentication)
+        // สำคัญ: คุณต้องแทนที่ค่าใน Array นี้ด้วย UID จริงของผู้ดูแลระบบของคุณ
+        // คุณสามารถหาได้จาก Firebase Console -> Authentication -> Users.
+        // หากมีผู้ดูแลระบบหลายคน สามารถเพิ่ม UID ลงใน Array ได้เลย
+        const ADMIN_UIDS = ['1rxYfFCSgsNIsGnHVUUUFeZK0hT2', 'tAzRTppCoCWuYdmN08scsRdE2Gx2']; 
+
+        let currentUserId = null;
+        let authReady = false;
+        let isAdminLoggedIn = false; // Tracks if an admin session is active
+        let currentRegistrationsData = []; // To store fetched report data for export (for the currently displayed report)
+        let preRegisteredStudentsData = []; // To store fetched pre-registered student IDs for view/manage
+        let selectedPreRegIdsForDeletion = new Set(); // To store selected IDs for multi-delete (Re-added)
+        let currentActiveSessionId = null; // To store the ID of the current active registration session
+        let sessionSummaries = []; // To store summaries of all past sessions for the dropdown
+        let currentHighestQueueNumber = 0; // Initialize global variable
+
+        // Ensure __initial_auth_token is defined or defaults to undefined
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : undefined;
+
+        // --- Firebase Authentication ---
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                currentUserId = user.uid;
+                authReady = true;
+                console.log("Firebase authenticated. User ID:", currentUserId);
+
+                // Check if the current authenticated user is one of the admins
+                if (ADMIN_UIDS.includes(user.uid)) {
+                    isAdminLoggedIn = true;
+                    console.log("Admin user recognized.");
+                } else {
+                    isAdminLoggedIn = false;
+                }
+                
+                // Ensure admin action buttons and panel/report are hidden on initial load
+                // Only show admin buttons if already logged in as admin
+                toggleAdminActionButtons(isAdminLoggedIn);
+                hideAdminPanel();
+                hideDailyReport();
+                // Ensure highestQueueNumberDisplay is hidden for non-admin view on load
+                currentQueueInfoDiv.style.display = 'none';
+
+                // Initialize current session ID on app load, and apply initial form status
+                await initializeCurrentSessionId();
+
+            } else {
+                console.log("Firebase not authenticated. Attempting sign-in...");
+                try {
+                    if (initialAuthToken) {
+                        try {
+                            console.log("Signing in with custom token...");
+                            await signInWithCustomToken(auth, initialAuthToken);
+                            console.log("Signed in with custom token successfully.");
+                        } catch (customTokenError) {
+                            console.warn("Custom token sign-in failed, falling back to anonymous:", customTokenError);
+                            // If custom token fails, explicitly try anonymous sign-in
+                            await signInAnonymously(auth);
+                            console.log("Signed in anonymously after custom token failure.");
+                        }
+                    } else {
+                        console.log("No custom token available, attempting anonymous sign-in...");
+                        await signInAnonymously(auth);
+                        console.log("Signed in anonymously successfully.");
+                    }
+                } catch (anonymousSignInError) {
+                    console.error("Error during Firebase sign-in (anonymous fallback failed):", anonymousSignInError);
+                    showError("เกิดข้อผิดพลาดในการเข้าสู่ระบบ โปรดตรวจสอบการตั้งค่า Firebase หรือลองอีกครั้ง");
+                    registerButton.disabled = true;
+                }
+            }
+        });
+
+        // --- Utility Functions ---
+
+        /**
+         * Generates a unique device ID and stores it in localStorage.
+         * Includes appId for better uniqueness across different apps/users.
+         * @returns {string} Unique device ID.
+         */
+        function getDeviceId() {
+            let deviceId = localStorage.getItem(`queueAppDeviceId_${appId}`);
+            if (!deviceId) {
+                deviceId = crypto.randomUUID();
+                localStorage.setItem(`queueAppDeviceId_${appId}`, deviceId);
+            }
+            return deviceId;
+        }
+
+        /**
+         * Gets the current date in YYYY-MM-DD format.
+         * @returns {string} Current date string.
+         */
+        function getCurrentDate() {
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const day = String(today.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+        
+        /**
+         * Generates a unique session ID, typically a timestamp string.
+         * @returns {string} Unique session ID.
+         */
+        function getUniqueSessionId() {
+            // Using ISO string for uniqueness and sortability, also readable
+            return new Date().toISOString(); 
+        }
+
+        /**
+         * Displays a success message to the user.
+         * @param {string} message General message to display.
+         * @param {object} [registrationDetails=null] Optional object with studentId, queueNumber, dailyAnswer, and timestamp.
+         */
+        function showMessage(message, registrationDetails = null) {
+            // Only use messageDisplay for general app messages, not admin login status
+            if (!message.includes("เข้าสู่ระบบผู้ดูแลระบบสำเร็จ")) {
+                messageDisplay.classList.remove('hidden', 'error-message');
+                messageDisplay.classList.add('message-box'); // Apply default message-box styles first
+                errorDisplay.classList.add('hidden'); // Hide any error messages
+                passwordErrorDisplay.classList.add('hidden'); // Hide password error
+                preRegSaveErrorDisplayModal.classList.add('hidden'); // Hide pre-reg save error
+                formStatusMessage.classList.add('hidden'); // Hide form status message
+
+                if (registrationDetails && registrationDetails.queueNumber !== null && 
+                    registrationDetails.studentId !== null && 
+                    registrationDetails.dailyAnswer !== null && 
+                    registrationDetails.timestamp !== null) {
+                    
+                    const dateTimeString = registrationDetails.timestamp.toLocaleString('th-TH', {
+                        year: 'numeric', month: '2-digit', day: '2-digit',
+                        hour: '2-digit', minute: '2-digit', second: '2-digit'
+                    });
+
+                    // Construct the detailed message HTML
+                    messageDisplay.innerHTML = `
+                        <p class="queue-text">คุณได้รับลำดับผู้เรียนหมายเลข :</p>
+                        <p class="queue-number-display">${registrationDetails.queueNumber}</p>
+                        <p class="text-sm text-gray-700 mt-2">
+                            <span class="font-semibold">วัน-เวลา:</span> ${dateTimeString}<br>
+                            <span class="font-semibold">รหัสนักศึกษา:</span> ${registrationDetails.studentId}<br>
+                            <span class="font-semibold">คำตอบประจำวัน:</span> ${registrationDetails.dailyAnswer}
+                        </p>
+                    `;
+                    messageDisplay.classList.add('highlight-success-message'); // Apply general highlight styles
+                } else {
+                    messageDisplay.textContent = message;
+                    messageDisplay.classList.remove('highlight-success-message'); // Remove highlight for other messages
+                    // Ensure previous innerHTML structure is removed if not a queue message
+                    if (messageDisplay.querySelector('.queue-text')) {
+                        messageDisplay.innerHTML = message; // Reset to plain text for other messages
+                    }
+                }
+            }
+        }
+
+        /**
+         * Displays an error message to the user.
+         * @param {string} message Error message to display.
+         */
+        function showError(message) {
+            errorDisplay.textContent = message;
+            errorDisplay.classList.remove('hidden', 'message-box');
+            errorDisplay.classList.add('error-message');
+            messageDisplay.classList.add('hidden'); // Hide any success messages
+            passwordErrorDisplay.classList.add('hidden'); // Hide password error
+            preRegSaveErrorDisplayModal.classList.add('hidden'); // Hide pre-reg save error
+            formStatusMessage.classList.add('hidden'); // Hide form status message
+        }
+
+        /**
+         * Displays a password-specific error message.
+         * @param {string} message Error message to display.
+         */
+        function showPasswordError(message) {
+            passwordErrorDisplay.textContent = message;
+            passwordErrorDisplay.classList.remove('hidden');
+            hideMessages(); // Hide general messages
+            preRegSaveErrorDisplayModal.classList.add('hidden'); // Hide pre-reg save error
+            adminLoginStatusMessage.classList.remove('visible'); // Hide admin login status
+        }
+
+        /**
+         * Displays a pre-registration save error message within the import modal.
+         * @param {string} message Error message to display.
+         */
+        function showPreRegSaveErrorModal(message) {
+            preRegSaveErrorDisplayModal.textContent = message;
+            preRegSaveErrorDisplayModal.classList.remove('hidden');
+            hideMessages(); // Hide general messages
+            passwordErrorDisplay.classList.add('hidden'); // Hide password error
+            adminLoginStatusMessage.classList.remove('visible'); // Hide admin login status
+        }
+
+        /**
+         * Hides all messages.
+         */
+        function hideMessages() {
+            messageDisplay.classList.add('hidden');
+            errorDisplay.classList.add('hidden');
+            passwordErrorDisplay.classList.add('hidden'); // Also hide password error
+            preRegSaveErrorDisplayModal.classList.add('hidden'); // Also hide pre-reg save error
+            // Ensure highlight class is removed when messages are hidden
+            messageDisplay.classList.remove('highlight-success-message');
+        }
+
+        /**
+         * Shows or hides the main loading indicator.
+         * @param {boolean} show True to show, False to hide.
+         */
+        function showLoading(show) {
+            if (show) {
+                loadingIndicator.classList.remove('hidden');
+            } else {
+                loadingIndicator.classList.add('hidden');
+            }
+        }
+
+        /**
+         * Shows or hides the report loading indicator.
+         * @param {boolean} show True to show, False to hide.
+         */
+        function showReportLoading(show) {
+            if (show) {
+                reportLoadingIndicator.classList.remove('hidden');
+                document.getElementById('leftTableContainer').innerHTML = '';
+                document.getElementById('rightTableContainer').innerHTML = '';
+                noReportDataMessage.classList.add('hidden'); // Hide no data message
+            } else {
+                reportLoadingIndicator.classList.add('hidden');
+            }
+        }
+
+        /**
+         * Shows the general confirmation modal.
+         * @param {string} message The message to display.
+         * @param {Function} confirmCallback Function to call on confirm.
+         * @param {string} [requiredTextForConfirmation=''] Optional text that must be typed for confirmation.
+         */
+        function showConfirmationModal(message, confirmCallback, requiredTextForConfirmation = '') {
+            confirmationModalMessage.textContent = message;
+            confirmationTextError.classList.add('hidden'); // Hide previous error
+            
+            if (requiredTextForConfirmation) {
+                confirmationTextInput.classList.remove('hidden');
+                confirmationTextInput.value = '';
+                confirmationTextInput.placeholder = `พิมพ์ '${requiredTextForConfirmation}' เพื่อยืนยัน`;
+                confirmationTextInput.focus();
+            } else {
+                confirmationTextInput.classList.add('hidden');
+                confirmationTextInput.value = '';
+            }
+
+            confirmActionButton.onclick = async () => {
+                if (requiredTextForConfirmation) {
+                    if (confirmationTextInput.value.trim() === requiredTextForConfirmation) {
+                        confirmationTextError.classList.add('hidden');
+                        await confirmCallback();
+                        hideConfirmationModal();
+                    } else {
+                        confirmationTextError.textContent = `ข้อความไม่ตรงกัน โปรดพิมพ์ '${requiredTextForConfirmation}'`;
+                        confirmationTextError.classList.remove('hidden');
+                        confirmationTextInput.focus(); // Keep focus on the input
+                    }
+                } else {
+                    await confirmCallback();
+                    hideConfirmationModal();
+                }
+            };
+            cancelActionButton.onclick = hideConfirmationModal;
+            confirmationModal.style.display = 'flex';
+        }
+
+        /**
+         * Hides the general confirmation modal.
+         */
+        function hideConfirmationModal() {
+            confirmationModal.style.display = 'none';
+            confirmationTextInput.classList.add('hidden'); // Ensure hidden on close
+            confirmationTextError.classList.add('hidden'); // Ensure hidden on close
+            confirmationTextInput.value = ''; // Clear value on close
+        }
+
+        /**
+         * Shows the Import Student IDs modal.
+         */
+        function showImportStudentIdsModal() {
+            importStudentIdsModal.style.display = 'flex';
+            preRegisteredIdsTextareaModal.focus(); // Focus on textarea when modal opens
+            preRegisteredIdsTextareaModal.value = ''; // Clear textarea on open
+            preRegSaveErrorDisplayModal.classList.add('hidden'); // Hide error on open
+        }
+
+        /**
+         * Hides the Import Student IDs modal.
+         */
+        function hideImportStudentIdsModal() {
+            importStudentIdsModal.style.display = 'none';
+            preRegisteredIdsTextareaModal.value = ''; // Clear on close
+            preRegSaveErrorDisplayModal.classList.add('hidden'); // Hide error on close
+        }
+
+        /**
+         * Shows the View/Manage Pre-registered IDs modal.
+         */
+        async function showViewPreRegisteredIdsModal() {
+            viewPreRegisteredIdsModal.style.display = 'flex';
+            await fetchPreRegisteredIds(); // Fetch data before rendering
+            preRegSearchInput.value = ''; // Clear search input on modal open
+            renderPreRegisteredIdsTable(); // Render table with no initial search query
+            selectedPreRegIdsForDeletion.clear(); // Clear selections on open (Re-added)
+            updateDeleteSelectedButtonState(); // Update button state (Re-added)
+            selectAllPreRegIdsCheckbox.checked = false; // Uncheck select all (Re-added)
+        }
+
+        /**
+         * Hides the View/Manage Pre-registered IDs modal.
+         */
+        function hideViewPreRegisteredIdsModal() {
+            viewPreRegisteredIdsModal.style.display = 'none';
+        }
+
+        /**
+         * Shows the admin panel (only password input).
+         */
+        function showAdminPanel() {
+            adminPanelContainer.style.display = 'flex';
+            // Pre-fill admin email for convenience if it's a fixed admin user
+            adminEmailInput.value = 'admin@example.com'; 
+            adminPasswordInput.value = ''; // Clear password on show
+            adminPasswordInput.focus(); // Focus on password for typing
+            passwordErrorDisplay.classList.add('hidden'); // Clear previous error
+        }
+
+        /**
+         * Hides the admin panel (only password input).
+         */
+        function hideAdminPanel() {
+            adminPanelContainer.style.display = 'none';
+            adminEmailInput.value = '';
+            adminPasswordInput.value = '';
+            passwordErrorDisplay.classList.add('hidden');
+        }
+
+        /**
+         * Hides the daily registration report table.
+         */
+        function hideDailyReport() {
+            reportSection.style.display = 'none';
+            // Also ensure noReportDataMessage is hidden when the whole section is hidden
+            noReportDataMessage.classList.add('hidden');
+            // Hide highestQueueNumberDisplay when daily report is closed
+            currentQueueInfoDiv.style.display = 'none';
+            sessionSelect.innerHTML = ''; // Clear dropdown when report is hidden
+        }
+
+        /**
+         * Toggles the visibility of admin action buttons (Import, View/Manage, Daily Report, Reset).
+         * Export is now in the report section.
+         * @param {boolean} show True to show, False to hide.
+         */
+        function toggleAdminActionButtons(show) {
+            document.getElementById('fixedImportButtonContainer').style.display = show ? 'flex' : 'none';
+            document.getElementById('fixedViewPreRegButtonContainer').style.display = show ? 'flex' : 'none';
+            document.getElementById('fixedDailyReportButtonContainer').style.display = show ? 'flex' : 'none';
+            document.getElementById('fixedToggleFormButtonContainer').style.display = show ? 'flex' : 'none';
+            document.getElementById('fixedResetButtonContainer').style.display = show ? 'flex' : 'none';
+        }
+
+        /**
+         * Initializes or retrieves the current active session ID from Firestore.
+         * Also fetches and applies the initial form open/close status.
+         * If no session exists, it creates a new one.
+         */
+        async function initializeCurrentSessionId() {
+            if (!authReady) return;
+
+            const queueMetadataRef = doc(db, `artifacts/${appId}/public/data/queueMetadata`, 'currentQueue');
+            try {
+                const docSnap = await getDoc(queueMetadataRef);
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    currentHighestQueueNumber = data.highestQueueNumber || 0;
+                    highestQueueNumberDisplay.textContent = currentHighestQueueNumber; // Direct assignment for display
+                    currentActiveSessionId = data.currentSessionId || getUniqueSessionId(); // Use existing or create new
+                    
+                    // If currentSessionId was missing, update Firestore
+                    if (!data.currentSessionId) {
+                         await setDoc(queueMetadataRef, { currentSessionId: currentActiveSessionId }, { merge: true });
+                    }
+                    // Apply initial form status (read once on load)
+                    const isFormOpen = data.isRegistrationFormOpen !== undefined ? data.isRegistrationFormOpen : true;
+                    updateFormUI(isFormOpen); // Call to update the UI on load
+                } else {
+                    // Initialize if the document doesn't exist
+                    currentHighestQueueNumber = 0; // Ensures it's 0 if doc doesn't exist
+                    highestQueueNumberDisplay.textContent = 0; // Direct assignment for display
+                    currentActiveSessionId = getUniqueSessionId();
+                    await setDoc(queueMetadataRef, {
+                        highestQueueNumber: 0,
+                        lastResetDate: getCurrentDate(),
+                        currentSessionId: currentActiveSessionId,
+                        sessionStartTime: serverTimestamp(), // Record start time for the first session
+                        isRegistrationFormOpen: true // Initialize form as open by default
+                    });
+                    updateFormUI(true); // Initial state is open
+                }
+            } catch (error) {
+                console.error("Error initializing current session ID:", error);
+                showError("เกิดข้อผิดพลาดในการเริ่มต้นเซสชันคิว");
+            }
+        }
+
+        /**
+         * Fetches and updates the highest queue number displayed for admin.
+         */
+        async function updateHighestQueueNumberDisplayForAdmin() {
+            if (!authReady) {
+                return;
+            }
+
+            const queueMetadataRef = doc(db, `artifacts/${appId}/public/data/queueMetadata`, 'currentQueue');
+            try {
+                const docSnap = await getDoc(queueMetadataRef); // Use getDoc instead of onSnapshot
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    highestQueueNumberDisplay.textContent = data.highestQueueNumber || 0;
+                } else {
+                    highestQueueNumberDisplay.textContent = 0;
+                }
+            } catch (error) {
+                console.error("Error fetching queue metadata for admin display:", error);
+            }
+        }
+        
+        /**
+         * Updates the student registration form's UI based on its open/closed status.
+         * @param {boolean} isOpen True if the form should be open, false if closed.
+         */
+        function updateFormUI(isOpen) {
+            if (isOpen) {
+                studentFormContainer.classList.remove('form-closed-overlay');
+                studentIdInput.disabled = false;
+                dailyAnswerInput.disabled = false;
+                registerButton.disabled = false;
+                formStatusMessage.classList.add('hidden');
+                toggleFormVisibilityButtonIcon.classList.remove('fa-lock');
+                toggleFormVisibilityButtonIcon.classList.add('fa-lock-open');
+                toggleFormVisibilityButton.title = 'สลับสถานะ: ปิดฟอร์ม';
+            } else {
+                studentFormContainer.classList.add('form-closed-overlay');
+                studentIdInput.disabled = true;
+                dailyAnswerInput.disabled = true;
+                registerButton.disabled = true;
+                formStatusMessage.classList.remove('hidden');
+                toggleFormVisibilityButtonIcon.classList.remove('fa-lock-open');
+                toggleFormVisibilityButtonIcon.classList.add('fa-lock');
+                toggleFormVisibilityButton.title = 'สลับสถานะ: เปิดฟอร์ม';
+            }
+        }
+
+
+        /**
+         * Gets the user's current geographical position.
+         * @returns {Promise<{latitude: number, longitude: number}|null>} A promise that resolves with coordinates or null if failed.
+         */
+        async function getGeolocation() {
+            return new Promise((resolve) => {
+                if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(
+                        (position) => {
+                            resolve({
+                                latitude: position.coords.latitude,
+                                longitude: position.coords.longitude
+                            });
+                        },
+                        (error) => {
+                            console.warn("Geolocation error:", error.message);
+                            resolve(null); // Return null on error or permission denied
+                        },
+                        {
+                            enableHighAccuracy: false, // Set to true if higher precision is needed (might be slower)
+                            timeout: 5000,
+                            maximumAge: 0
+                        }
+                    );
+                } else {
+                    console.warn("Geolocation is not supported by this browser.");
+                    resolve(null);
+                }
+            });
+        }
+
+        /**
+         * Handles the queue registration process.
+         */
+        async function registerQueue() {
+            if (!authReady || !currentActiveSessionId) {
+                showError("ระบบยังไม่พร้อม หรือเซสชันยังไม่ถูกกำหนด โปรดรอสักครู่และลองอีกครั้ง");
+                showLoading(false);
+                return;
+            }
+
+            // Check if the form is currently closed before proceeding with registration logic
+            if (studentFormContainer.classList.contains('form-closed-overlay')) {
+                showMessage("การลงทะเบียนปิดอยู่ โปรดรอการเปิดรอบถัดไป");
+                showLoading(false);
+                return;
+            }
+
+            hideMessages();
+            showLoading(true);
+
+            const studentId = studentIdInput.value.trim();
+            const dailyAnswer = dailyAnswerInput.value.trim(); // Get the new daily answer
+            const registrationTimeClient = new Date(); // Capture client-side timestamp for display
+
+            // Validate studentId for 10 digits and numeric content
+            if (studentId.length !== 10 || isNaN(studentId)) {
+                showError("กรุณากรอกรหัสนักศึกษาให้ครบ 10 หลัก และเป็นตัวเลขเท่านั้น");
+                showLoading(false);
+                return;
+            }
+
+            // Simple validation for daily answer - can be adjusted
+            if (dailyAnswer === "") {
+                showError("กรุณากรอกคำตอบสำหรับคำถามประจำวันนี้");
+                showLoading(false);
+                return;
+            }
+
+            // Get geolocation data before the transaction, as it's a client-side call
+            const geo = await getGeolocation();
+            const latitude = geo ? geo.latitude : 'N/A';
+            const longitude = geo ? geo.longitude : 'N/A';
+
+            const deviceId = getDeviceId();
+            const currentDate = getCurrentDate();
+
+            // Check localStorage for prior registration today on this device
+            const lastRegistrationDate = localStorage.getItem(`lastRegistrationDate_${appId}_${deviceId}`);
+            if (lastRegistrationDate === currentDate) {
+                showError("คุณได้ลงทะเบียนผู้เรียนไปแล้วสำหรับวันนี้ บนอุปกรณ์นี้");
+                showLoading(false);
+                return;
+            }
+
+            try {
+                // Use a transaction to ensure atomic increment of queue number and registration
+                const newQueueNumber = await runTransaction(db, async (transaction) => {
+                    // Check if student ID is pre-registered
+                    const preRegDocRef = doc(db, `artifacts/${appId}/public/data/preRegisteredStudentIds`, studentId);
+                    const preRegDocSnap = await transaction.get(preRegDocRef); // Use transaction.get
+
+                    if (!preRegDocSnap.exists()) {
+                        throw new Error("คุณยังไม่มีรายชื่ออยู่ในระบบเช็คชื่อ กรุณาแจ้งอาจารย์ผู้สอน");
+                    }
+
+                    const queueMetadataRef = doc(db, `artifacts/${appId}/public/data/queueMetadata`, 'currentQueue');
+                    const queueMetadataDoc = await transaction.get(queueMetadataRef);
+
+                    // currentHighestQueueNumber is a global variable, ensure it's updated within the transaction scope
+                    let currentHighestQueueNumberInTx = 0; 
+                    let lastResetDateInDb = null;
+                    let sessionStartTime = null; 
+
+                    if (queueMetadataDoc.exists()) {
+                        const data = queueMetadataDoc.data();
+                        currentHighestQueueNumberInTx = data.highestQueueNumber || 0;
+                        lastResetDateInDb = data.lastResetDate; 
+                        currentActiveSessionId = data.currentSessionId || currentActiveSessionId; 
+                        sessionStartTime = data.sessionStartTime ? data.sessionStartTime.toDate() : null; 
+                    } else {
+                        currentActiveSessionId = getUniqueSessionId();
+                        sessionStartTime = new Date(); 
+                        transaction.set(queueMetadataRef, { currentSessionId: currentActiveSessionId, highestQueueNumber: 0, sessionStartTime: serverTimestamp(), isRegistrationFormOpen: true }, { merge: true });
+                    }
+                    
+                    // Update the global currentHighestQueueNumber here for consistency after transaction
+                    currentHighestQueueNumber = currentHighestQueueNumberInTx;
+
+                    // Check if student ID has already registered for the current session in Firestore
+                    const q = query(
+                        collection(db, `artifacts/${appId}/public/data/queueRegistrations`),
+                        where("studentId", "==", studentId),
+                        where("sessionId", "==", currentActiveSessionId) // Check by sessionId
+                    );
+                    const querySnapshot = await getDocs(q); // This is a read operation
+                    if (!querySnapshot.empty) {
+                        // If a duplicate is found for the current session, throw an error to abort the transaction.
+                        throw new Error("รหัสนักศึกษานี้ได้ลงทะเบียนคิวไปแล้วสำหรับรอบนี้"); // Updated message
+                    }
+
+                    const nextQueueNumber = currentHighestQueueNumberInTx + 1; // Use in-transaction value
+
+                    // Check queue limit
+                    if (nextQueueNumber > 200) {
+                        throw new Error("คิวเต็มแล้วสำหรับรอบนี้"); // Updated error message
+                    }
+
+                    // Update highestQueueNumber in metadata within the transaction
+                    transaction.set(queueMetadataRef, {
+                        highestQueueNumber: nextQueueNumber
+                    }, { merge: true });
+
+                    // Add the new registration record within the transaction
+                    const newRegistrationDocRef = doc(collection(db, `artifacts/${appId}/public/data/queueRegistrations`)); // Creates a new document reference with auto-ID
+                    transaction.set(newRegistrationDocRef, {
+                        studentId: studentId,
+                        queueNumber: nextQueueNumber,
+                        registrationDate: currentDate, 
+                        dailyAnswer: dailyAnswer, 
+                        deviceId: deviceId,
+                        timestamp: serverTimestamp(), 
+                        latitude: latitude,
+                        longitude: longitude,
+                        sessionId: currentActiveSessionId 
+                    });
+
+                    return nextQueueNumber; 
+                });
+
+                // If we reach here, the transaction was successful and newQueueNumber is valid
+                localStorage.setItem(`lastRegistrationDate_${appId}_${deviceId}`, currentDate); 
+                
+                showMessage(
+                    `คุณได้รับคิวหมายเลข: ${newQueueNumber}`,
+                    {
+                        queueNumber: newQueueNumber,
+                        studentId: studentId,
+                        dailyAnswer: dailyAnswer,
+                        timestamp: registrationTimeClient 
+                    }
+                );
+                studentIdInput.value = '';
+                dailyAnswerInput.value = '';
+                
+                if (reportSection.style.display !== 'none' && isAdminLoggedIn) {
+                     updateHighestQueueNumberDisplayForAdmin(); 
+                     refreshAndDisplayRegistrationReport(currentActiveSessionId); 
+                }
+
+            } catch (e) {
+                console.error("Error in transaction or registration:", e);
+                if (e.message === "คุณยังไม่มีรายชื่ออยู่ในระบบเช็คชื่อ กรุณาแจ้งอาจารย์ผู้สอน" ||
+                    e.message === "คิวเต็มแล้วสำหรับรอบนี้" ||
+                    e.message === "รหัสนักศึกษานี้ได้ลงทะเบียนคิวไปแล้วสำหรับรอบนี้") {
+                    showError(e.message);
+                } else if (e.code === 'ABORTED') {
+                    showError("เกิดข้อผิดพลาดในการลงทะเบียนคิว: มีผู้ใช้ลงทะเบียนพร้อมกัน กรุณาลองอีกครั้ง");
+                }
+                else {
+                    // Catch-all for other errors, including permission-denied
+                    let specificErrorMessage = "เกิดข้อผิดพลาดในการลงทะเบียนคิว โปรดลองอีกครั้ง";
+                    if (e.code === 'permission-denied') {
+                        specificErrorMessage = "การลงทะเบียนถูกปฏิเสธ: ไม่ได้รับอนุญาตให้แก้ไขคิว โปรดแจ้งผู้ดูแลระบบ";
+                    } else if (e.message) {
+                        specificErrorMessage = `เกิดข้อผิดพลาด: ${e.message}`; // Fallback to raw message if available
+                    }
+                    showError(specificErrorMessage);
+                }
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        /**
+         * Ends the current session, archives its summary, and starts a new session.
+         */
+        async function endCurrentSessionAndStartNew() {
+            if (!authReady) {
+                showError("ระบบยังไม่พร้อม โปรดรอสักครู่และลองอีกครั้ง");
+                return;
+            }
+            if (!isAdminLoggedIn) {
+                showError("คุณไม่มีสิทธิ์ดำเนินการนี้");
+                return;
+            }
+
+            showLoading(true);
+            hideMessages();
+
+            try {
+                // Get current metadata
+                const queueMetadataRef = doc(db, `artifacts/${appId}/public/data/queueMetadata`, 'currentQueue');
+                const queueMetadataDoc = await getDoc(queueMetadataRef);
+
+                let previousHighestQueueNumber = 0;
+                let oldSessionId = null;
+                let sessionStartTime = null;
+                let isFormOpenStatus = true; // Preserve current form open status
+
+                if (queueMetadataDoc.exists()) {
+                    const data = queueMetadataDoc.data();
+                    previousHighestQueueNumber = data.highestQueueNumber || 0;
+                    oldSessionId = data.currentSessionId || currentActiveSessionId;
+                    sessionStartTime = data.sessionStartTime;
+                    isFormOpenStatus = data.isRegistrationFormOpen !== undefined ? data.isRegistrationFormOpen : true;
+                } else {
+                    oldSessionId = currentActiveSessionId;
+                    sessionStartTime = serverTimestamp(); 
+                }
+
+                // 1. Archive the current session summary if there were registrations
+                if (previousHighestQueueNumber > 0 && oldSessionId) {
+                    const sessionSummaryRef = doc(db, `artifacts/${appId}/public/data/queueSessions`, oldSessionId);
+                    await setDoc(sessionSummaryRef, {
+                        sessionId: oldSessionId,
+                        totalRegisteredStudents: previousHighestQueueNumber,
+                        startTime: sessionStartTime || serverTimestamp(), 
+                        endTime: serverTimestamp(), 
+                        resetBy: currentUserId,
+                        resetDate: getCurrentDate()
+                    }, { merge: true });
+                }
+
+                // 2. Start a new session
+                const newSessionId = getUniqueSessionId();
+                await setDoc(queueMetadataRef, {
+                    highestQueueNumber: 0,
+                    lastResetDate: getCurrentDate(), 
+                    currentSessionId: newSessionId,
+                    sessionStartTime: serverTimestamp(), 
+                    isRegistrationFormOpen: isFormOpenStatus // Preserve form open status for new session
+                }, { merge: true });
+
+                currentActiveSessionId = newSessionId; 
+                highestQueueNumberDisplay.textContent = 0; 
+
+                showMessage("รีเซ็ตคิวสำเร็จและเริ่มต้นรอบคิวใหม่แล้ว ข้อมูลรอบเก่าถูกเก็บไว้");
+                
+                await populateSessionDropdown();
+                sessionSelect.value = currentActiveSessionId; 
+                refreshAndDisplayRegistrationReport(currentActiveSessionId); 
+
+            }
+            catch (e) {
+                console.error("Error ending current session and starting new:", e);
+                showError("เกิดข้อผิดพลาดในการรีเซ็ตและเริ่มต้นรอบคิวใหม่ โปรดลองอีกครั้ง");
+            }
+            finally {
+                showLoading(false);
+                hideConfirmationModal();
+            }
+        }
+
+        /**
+         * Fetches and displays the registration report for a specific session ID.
+         * If no sessionId is provided, it defaults to the current active session.
+         * @param {string} [sessionIdToDisplay=currentActiveSessionId] The session ID to display the report for.
+         */
+        async function refreshAndDisplayRegistrationReport(sessionIdToDisplay = currentActiveSessionId) {
+            if (!authReady) {
+                console.warn("Authentication not ready for report fetch.");
+                showError("ระบบยังไม่พร้อม โปรดรอสักครู่และลองอีกครั้ง");
+                return;
+            }
+            // Report viewing is an admin-only action
+            if (!isAdminLoggedIn) {
+                showError("คุณไม่มีสิทธิ์เข้าถึงรายงานนี้ โปรดเข้าสู่ระบบในฐานะผู้ดูแลระบบ");
+                return;
+            }
+
+            showReportLoading(true);
+            hideMessages(); 
+
+            try {
+                // Update current queue number for admin view (always for the active session)
+                await updateHighestQueueNumberDisplayForAdmin();
+                currentQueueInfoDiv.style.display = 'block'; 
+
+                const q = query(
+                    collection(db, `artifacts/${appId}/public/data/queueRegistrations`),
+                    where("sessionId", "==", sessionIdToDisplay) 
+                );
+                const querySnapshot = await getDocs(q);
+
+                currentRegistrationsData = [];
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    currentRegistrationsData.push(data);
+                });
+
+                currentRegistrationsData.sort((a, b) => a.queueNumber - b.queueNumber);
+
+                // Get the table containers
+                const leftTableContainer = document.getElementById('leftTableContainer');
+                const rightTableContainer = document.getElementById('rightTableContainer');
+
+                // Clear previous content
+                leftTableContainer.innerHTML = '';
+                rightTableContainer.innerHTML = '';
+
+
+                if (currentRegistrationsData.length > 0) {
+                    const midpoint = Math.ceil(currentRegistrationsData.length / 2);
+                    const leftHalf = currentRegistrationsData.slice(0, midpoint);
+                    const rightHalf = currentRegistrationsData.slice(midpoint);
+
+                    const generateTableHtml = (data) => {
+                        if (data.length === 0) return '';
+
+                        let tableHtml = `
+                            <table class="report-table mb-4"> 
+                                <thead>
+                                    <tr>
+                                        <th>ลำดับ</th>
+                                        <th>รหัสนักศึกษา</th>
+                                        <th>คำตอบประจำวัน</th> 
+                                        <th>วัน-เวลาลงทะเบียน</th> 
+                                    </tr>
+                                </thead>
+                                <tbody>
+                        `;
+                        data.forEach(reg => {
+                            const registrationDateTime = reg.timestamp && reg.timestamp.toDate ?
+                                reg.timestamp.toDate().toLocaleString('th-TH', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' }) : 'N/A';
+                            tableHtml += `
+                                <tr>
+                                    <td>${reg.queueNumber}</td>
+                                    <td>${reg.studentId}</td>
+                                    <td>${reg.dailyAnswer || 'N/A'}</td> 
+                                    <td>${registrationDateTime}</td>
+                                </tr>
+                            `;
+                        });
+                        tableHtml += `
+                                </tbody>
+                            </table>
+                        `;
+                        return tableHtml;
+                    };
+
+                    const leftTableHtml = generateTableHtml(leftHalf);
+                    const rightTableHtml = generateTableHtml(rightHalf);
+
+                    if (leftHalf.length > 0) {
+                        leftTableContainer.innerHTML = leftTableHtml;
+                    }
+                    if (rightHalf.length > 0) {
+                        rightTableContainer.innerHTML = rightTableHtml;
+                    }
+
+                    noReportDataMessage.classList.add('hidden');
+                    leftTableContainer.style.display = 'block'; // Ensure they are visible
+                    rightTableContainer.style.display = 'block';
+                } else {
+                    // If no data, hide the table containers and show the message
+                    noReportDataMessage.classList.remove('hidden');
+                    leftTableContainer.style.display = 'none';
+                    rightTableContainer.style.display = 'none';
+                }
+                reportSection.style.display = 'block'; 
+            } catch (e) {
+                console.error("Error fetching registration report:", e);
+                showError("เกิดข้อผิดพลาดในการดึงรายงานการลงทะเบียน");
+            } finally {
+                showReportLoading(false);
+                await populateSessionDropdown(sessionIdToDisplay); 
+            }
+        }
+
+        /**
+         * Populates the session dropdown with available historical sessions.
+         * Optionally pre-selects a given session ID.
+         * @param {string} [selectedId=null] The session ID to pre-select in the dropdown.
+         */
+        async function populateSessionDropdown(selectedId = null) {
+            sessionSelect.innerHTML = ''; 
+            sessionSummaries = []; 
+
+            try {
+                const q = query(collection(db, `artifacts/${appId}/public/data/queueSessions`));
+                const querySnapshot = await getDocs(q);
+                querySnapshot.forEach(docSnap => {
+                    const data = docSnap.data();
+                    sessionSummaries.push(data);
+                });
+
+                // Sort sessions by end time (newest first)
+                sessionSummaries.sort((a, b) => {
+                    const timeA = a.endTime ? a.endTime.toDate().getTime() : 0;
+                    const timeB = b.endTime ? b.endTime.toDate().getTime() : 0;
+                    return timeB - timeA;
+                });
+
+                // Add "Current Session" as the first option if currentActiveSessionId exists and is valid
+                if (currentActiveSessionId) {
+                    const currentOption = document.createElement('option');
+                    currentOption.value = currentActiveSessionId;
+                    const today = new Date();
+                    // Format current session to "รอบปัจจุบัน (วันเดือนปี เวลา)"
+                    currentOption.textContent = `รอบปัจจุบัน (${today.toLocaleDateString('th-TH', { day: '2-digit', month: '2-digit', year: 'numeric' })} ${today.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })} น.)`; 
+                    sessionSelect.appendChild(currentOption);
+                }
+
+                sessionSummaries.forEach(session => {
+                    const option = document.createElement('option');
+                    option.value = session.sessionId;
+                    
+                    const startDate = session.startTime ? session.startTime.toDate() : null;
+                    const endDate = session.endTime ? session.endTime.toDate() : null;
+
+                    let startDateFormatted = 'N/A';
+                    let startTimeFormatted = 'N/A';
+                    let endDateFormatted = 'N/A';
+                    let endTimeFormatted = 'N/A';
+
+                    if (startDate) {
+                        startDateFormatted = startDate.toLocaleDateString('th-TH', { day: '2-digit', month: '2-digit', year: 'numeric' });
+                        startTimeFormatted = startDate.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
+                    }
+                    if (endDate) {
+                        endDateFormatted = endDate.toLocaleDateString('th-TH', { day: '2-digit', month: '2-digit', year: 'numeric' });
+                        endTimeFormatted = endDate.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
+                    }
+                    
+                    // New format: "รอบคิว: วันที่เริ่ม (เวลาเริ่ม) - รีเซ็ตเมื่อ: วันที่สิ้นสุด (เวลาที่รีเซ็ต) (X คน)"
+                    option.textContent = `รอบคิว: ${startDateFormatted} (${startTimeFormatted} น.) - รีเซ็ตเมื่อ: ${endDateFormatted} (${endTimeFormatted} น.) (${session.totalRegisteredStudents || 0} คน)`;
+                    sessionSelect.appendChild(option);
+                });
+
+                // Set selected value
+                if (selectedId) {
+                    sessionSelect.value = selectedId;
+                } else if (currentActiveSessionId) {
+                    sessionSelect.value = currentActiveSessionId;
+                }
+
+            } catch (error) {
+                console.error("Error populating session dropdown:", error);
+                showError("เกิดข้อผิดพลาดในการดึงข้อมูลรอบรายงาน");
+            }
+        }
+
+
+        /**
+         * Exports the current registration report data to a CSV file.
+         */
+        function exportRegistrationReportToCsv() {
+            if (!currentRegistrationsData || currentRegistrationsData.length === 0) {
+                showError("ไม่มีข้อมูลรายงานให้ส่งออก");
+                return false; 
+            }
+            if (!isAdminLoggedIn) {
+                showError("คุณไม่มีสิทธิ์ดำเนินการนี้");
+                return false;
+            }
+
+            // Updated headers for CSV
+            const headers = ["ลำดับ", "รหัสนักศึกษา", "คำตอบประจำวัน", "เวลาลงทะเบียน", "ละติจูด", "ลองจิจูด", "Session ID"]; 
+            // Escape values that might contain commas or newlines
+            const escapeCsv = (value) => {
+                if (value === null || value === undefined) return '';
+                const stringValue = String(value);
+                if (stringValue.includes(',') || stringValue.includes('\n') || stringValue.includes('"')) {
+                    return `"${stringValue.replace(/"/g, '""')}"`;
+                }
+                return stringValue;
+            };
+
+            const rows = currentRegistrationsData.map(reg => {
+                const registrationDateTime = reg.timestamp && reg.timestamp.toDate ?
+                    reg.timestamp.toDate().toLocaleString('th-TH', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' }) : 'N/A';
+                
+                const latitude = typeof reg.latitude === 'number' ? reg.latitude.toFixed(4) : reg.latitude;
+                const longitude = typeof reg.longitude === 'number' ? reg.longitude.toFixed(4) : reg.longitude;
+
+                return [
+                    escapeCsv(reg.queueNumber),
+                    escapeCsv(reg.studentId),
+                    escapeCsv(reg.dailyAnswer || 'N/A'), 
+                    escapeCsv(registrationDateTime),
+                    escapeCsv(latitude),
+                    escapeCsv(longitude),
+                    escapeCsv(reg.sessionId || 'N/A') 
+                ].join(',');
+            });
+
+            // Determine filename based on selected session or current date
+            let filename = `รายงานลำดับผู้เรียน_${getCurrentDate()}.csv`;
+            if (sessionSelect.value && sessionSelect.value !== currentActiveSessionId) {
+                const selectedSession = sessionSummaries.find(s => s.sessionId === sessionSelect.value);
+                if (selectedSession && selectedSession.startTime && selectedSession.endTime) {
+                    const start = selectedSession.startTime.toDate().toLocaleString('th-TH', { year: 'numeric', month: '2-digit', day: '2-digit' });
+                    const end = selectedSession.endTime.toDate().toLocaleString('th-TH', { year: 'numeric', month: '2-digit', day: '2-digit' });
+                    filename = `รายงานลำดับผู้เรียน_รอบ_${start}-${end}.csv`;
+                }
+            }
+
+
+            const csvContent = [headers.map(escapeCsv).join(','), ...rows].join('\n');
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a); 
+            a.click();
+            document.body.removeChild(a); 
+            URL.revokeObjectURL(url); 
+
+            showMessage("บันทึกรายงานเป็นไฟล์ CSV เรียบร้อยแล้ว");
+            return true; 
+        }
+
+
+        /**
+         * Saves pre-registered student IDs from the textarea to Firestore.
+         */
+        async function savePreRegisteredIds() {
+            console.log("savePreRegisteredIds function called."); 
+
+            hideMessages(); 
+            preRegSaveErrorDisplayModal.classList.add('hidden'); 
+
+            if (!isAdminLoggedIn) {
+                showPreRegSaveErrorModal("คุณไม่มีสิทธิ์ดำเนินการนี้");
+                return;
+            }
+
+            const idsToSaveText = preRegisteredIdsTextareaModal.value.trim();
+            if (!idsToSaveText) {
+                showPreRegSaveErrorModal("กรุณากรอกรหัสนักศึกษาก่อนบันทึก");
+                console.log("Validation failed: No IDs to save.");
+                return;
+            }
+
+            // Split by newline or comma, filter out empty strings
+            const idsToSave = idsToSaveText.split(/[\n,;]+/) 
+                                           .map(id => id.trim())
+                                           .filter(id => id.length > 0);
+
+            if (idsToSave.length === 0) {
+                showPreRegSaveErrorModal("ไม่พบรหัสนักษาที่ถูกต้อง กรุณาตรวจสอบรูปแบบ (10 หลัก, ตัวเลข)");
+                console.log("Validation failed: Parsed IDs list is empty.");
+                return;
+            }
+
+            // Optional: Client-side validation for ID format before sending to Firestore
+            const invalidIds = idsToSave.filter(id => id.length !== 10 || isNaN(id));
+            if (invalidIds.length > 0) {
+                showPreRegSaveErrorModal(`มีรหัสที่ไม่ถูกต้อง: ${invalidIds.join(', ')}. โปรดตรวจสอบ (ต้องเป็นตัวเลข 10 หลัก)`);
+                console.log("Validation failed: Invalid ID format detected.");
+                return;
+            }
+
+            try {
+                showLoading(true);
+                const preRegCollectionRef = collection(db, `artifacts/${appId}/public/data/preRegisteredStudentIds`);
+                const addBatch = writeBatch(db);
+                let addedCount = 0; 
+                let updatedCount = 0; 
+
+                for (const id of idsToSave) {
+                    const docRef = doc(preRegCollectionRef, id);
+                    const docSnap = await getDoc(docRef); 
+
+                    if (docSnap.exists()) {
+                        addBatch.set(docRef, { exists: true, addedBy: currentUserId, timestamp: serverTimestamp() }, { merge: true });
+                        updatedCount++;
+                    } else {
+                        addBatch.set(docRef, { exists: true, addedBy: currentUserId, timestamp: serverTimestamp() });
+                        addedCount++;
+                    }
+                }
+                await addBatch.commit();
+                console.log(`Pre-registered IDs added: ${addedCount}, updated: ${updatedCount}.`);
+
+                showMessage(`นำเข้าข้อมูลสำเร็จ: เพิ่มนักศึกษา ${addedCount} รายการ, อัปเดต ${updatedCount} รายการ`);
+                hideImportStudentIdsModal(); 
+            } catch (e) {
+                console.error("Error saving pre-registered IDs:", e);
+                let errorMessage = "เกิดข้อผิดพลาดในการบันทึกรายชื่อนักศึกษา โปรดลองอีกครั้ง";
+                if (e.code && e.message) {
+                    errorMessage = `เกิดข้อผิดพลาดจาก Firebase: ${e.code} - ${e.message}`;
+                } else if (e.message) {
+                    errorMessage = `เกิดข้อผิดพลาด: ${e.message}`;
+                }
+                showPreRegSaveErrorModal(errorMessage);
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        /**
+         * Fetches all pre-registered student IDs from Firestore.
+         */
+        async function fetchPreRegisteredIds() {
+            if (!authReady) {
+                console.warn("Authentication not ready for fetching pre-registered IDs.");
+                showError("ระบบยังไม่พร้อม โปรดรอสักครู่และลองอีกครั้ง");
+                return;
+            }
+            // All users need to read pre-registered IDs to check if they are allowed to register.
+            // Admin needs to read for management purposes. No isAdminLoggedIn check needed here.
+
+            preRegisteredStudentsData = []; 
+            try {
+                showLoading(true);
+                const preRegCollectionRef = collection(db, `artifacts/${appId}/public/data/preRegisteredStudentIds`);
+                const querySnapshot = await getDocs(query(preRegCollectionRef)); 
+                querySnapshot.forEach(docSnap => {
+                    preRegisteredStudentsData.push(docSnap.id); 
+                });
+                preRegisteredStudentsData.sort(); 
+            } catch (e) {
+                console.error("Error fetching pre-registered IDs:", e);
+                showError("เกิดข้อผิดพลาดในการดึงรายชื่อนักศึกษาล่วงหน้า");
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        /**
+         * Renders the pre-registered student IDs into the table in the view modal.
+         * @param {string} searchQuery Optional: text to filter the student IDs by.
+         */
+        function renderPreRegisteredIdsTable(searchQuery = '') {
+            preRegisteredIdsTableBody.innerHTML = ''; 
+            selectedPreRegIdsForDeletion.clear(); // Re-added
+            selectAllPreRegIdsCheckbox.checked = false; // Re-added
+            updateDeleteSelectedButtonState(); // Re-added
+
+            let filteredData = preRegisteredStudentsData;
+            if (searchQuery) {
+                const lowerCaseQuery = searchQuery.toLowerCase();
+                filteredData = preRegisteredStudentsData.filter(id =>
+                    id.toLowerCase().includes(lowerCaseQuery)
+                );
+            }
+
+            totalPreRegisteredStudentsSpan.textContent = filteredData.length;
+
+            if (filteredData.length === 0) {
+                noPreRegDataMessagePreReg.classList.remove('hidden');
+                preRegisteredIdsTableContainer.classList.add('hidden'); 
+                return;
+            } else {
+                noPreRegDataMessagePreReg.classList.add('hidden');
+                preRegisteredIdsTableContainer.classList.remove('hidden'); 
+            }
+
+            filteredData.forEach(id => { // Use filteredData here
+                const row = preRegisteredIdsTableBody.insertRow();
+                row.dataset.studentId = id; 
+
+                // Checkbox cell
+                const checkboxCell = row.insertCell();
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.className = 'pre-reg-checkbox';
+                checkbox.dataset.studentId = id;
+                checkbox.addEventListener('change', updateDeleteSelectedButtonState);
+                checkboxCell.appendChild(checkbox);
+
+                // Student ID cell
+                const idCell = row.insertCell();
+                idCell.textContent = id;
+                idCell.dataset.originalId = id; 
+                
+                // The 'จัดการ' column is now completely removed from HTML and JS.
+            });
+        }
+
+        // The enableInlineEdit and disableInlineEdit functions have been removed.
+
+        /**
+         * Updates a pre-registered student ID in Firestore (deletes old, creates new).
+         * This function is no longer called directly from UI due to removal of edit button.
+         * Kept for potential future use or if other parts of the app rely on it.
+         * @param {string} oldId The current student ID.
+         * @param {string} newId The new student ID.
+         */
+        async function updatePreRegisteredId(oldId, newId) {
+            if (!isAdminLoggedIn) {
+                throw new Error("คุณไม่มีสิทธิ์ดำเนินการนี้");
+            }
+            try {
+                showLoading(true);
+                const preRegCollectionRef = collection(db, `artifacts/${appId}/public/data/preRegisteredStudentIds`);
+                const batch = writeBatch(db);
+
+                // Delete old document
+                const oldDocRef = doc(preRegCollectionRef, oldId);
+                batch.delete(oldDocRef);
+
+                // Create new document
+                const newDocRef = doc(preRegCollectionRef, newId);
+                batch.set(newDocRef, { exists: true, addedBy: currentUserId, timestamp: serverTimestamp(), updatedFrom: oldId }); 
+
+                await batch.commit();
+            } catch (e) {
+                console.error("Error updating pre-registered ID:", e);
+                let errorMessage = "เกิดข้อผิดพลาดในการแก้ไขรายชื่อนักศึกษา โปรดลองอีกครั้ง";
+                if (e.code && e.message) {
+                    errorMessage = `เกิดข้อผิดพลาดจาก Firebase: ${e.code} - ${e.message}`;
+                } else if (e.message) {
+                    errorMessage = `เกิดข้อผิดพลาด: ${e.message}`;
+                }
+                showPreRegSaveErrorModal(errorMessage);
+                throw e; 
+            } finally {
+                showLoading(false);
+            }
+        }
+
+
+        /**
+         * Deletes a single pre-registered student ID from Firestore.
+         * @param {string} studentId The ID to delete.
+         */
+        async function deletePreRegisteredId(studentId) {
+            if (!isAdminLoggedIn) {
+                showError("คุณไม่มีสิทธิ์ดำเนินการนี้");
+                return;
+            }
+            try {
+                showLoading(true);
+                const docRef = doc(db, `artifacts/${appId}/public/data/preRegisteredStudentIds`, studentId);
+                await deleteDoc(docRef);
+            } catch (e) {
+                console.error("Error deleting pre-registered ID:", e);
+                showError("เกิดข้อผิดพลาดในการลบรายชื่อนักศึกษา");
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        /**
+         * Deletes multiple selected pre-registered student IDs from Firestore.
+         * @param {Set<string>} idsToDelete A set of student IDs to delete.
+         */
+        async function deleteSelectedPreRegisteredIds(idsToDelete) {
+            if (idsToDelete.size === 0) {
+                showMessage("โปรดเลือกรหัสนักศึกษาที่ต้องการลบ");
+                return;
+            }
+            if (!isAdminLoggedIn) {
+                showError("คุณไม่มีสิทธิ์ดำเนินการนี้");
+                return;
+            }
+
+            try {
+                showLoading(true);
+                const batch = writeBatch(db);
+                idsToDelete.forEach(id => {
+                    const docRef = doc(db, `artifacts/${appId}/public/data/preRegisteredStudentIds`, id);
+                    batch.delete(docRef);
+                });
+                await batch.commit();
+
+                showMessage(`ลบนักศึกษาที่เลือกจำนวน ${idsToDelete.size} รายการสำเร็จ`);
+                selectedPreRegIdsForDeletion.clear(); // Re-added
+                await fetchPreRegisteredIds(); 
+                renderPreRegisteredIdsTable(preRegSearchInput.value.trim()); // Re-render with current search query
+            }
+            catch (e) {
+                console.error("Error deleting selected pre-registered IDs:", e);
+                showError("เกิดข้อผิดพลาดในการลบรายชื่อนักศึกษาที่เลือก");
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        /**
+         * Updates the state of the "Delete Selected" button based on checkbox selections.
+         */
+        function updateDeleteSelectedButtonState() {
+            const checkboxes = preRegisteredIdsTableBody.querySelectorAll('.pre-reg-checkbox:checked');
+            selectedPreRegIdsForDeletion.clear();
+            checkboxes.forEach(cb => selectedPreRegIdsForDeletion.add(cb.dataset.studentId));
+            deleteSelectedPreRegisteredIdsButton.disabled = selectedPreRegIdsForDeletion.size === 0 || !isAdminLoggedIn;
+        }
+
+        /**
+         * Deletes a specific report session (all its registrations and the session summary).
+         * @param {string} sessionIdToDelete The ID of the session to delete.
+         */
+        async function deleteReportSession(sessionIdToDelete) {
+            if (!isAdminLoggedIn) {
+                showError("คุณไม่มีสิทธิ์ดำเนินการนี้");
+                return;
+            }
+
+            showLoading(true);
+            hideMessages();
+
+            try {
+                const batch = writeBatch(db);
+
+                // 1. Delete all individual registration records for this session
+                const qRegistrations = query(
+                    collection(db, `artifacts/${appId}/public/data/queueRegistrations`),
+                    where("sessionId", "==", sessionIdToDelete)
+                );
+                const registrationsSnapshot = await getDocs(qRegistrations);
+                registrationsSnapshot.forEach(docSnap => {
+                    batch.delete(docSnap.ref);
+                });
+
+                // 2. Delete the session summary document itself
+                const sessionSummaryDocRef = doc(db, `artifacts/${appId}/public/data/queueSessions`, sessionIdToDelete);
+                batch.delete(sessionSummaryDocRef);
+
+                await batch.commit();
+
+                showMessage(`ลบรายงานรอบ ${sessionSelect.options[sessionSelect.selectedIndex].textContent} สำเร็จแล้ว`);
+                hideDailyReport(); // Hide the report section after deletion
+                await populateSessionDropdown(); // Re-populate dropdown to remove the deleted session
+                
+                // After deleting, ensure the session dropdown defaults to current or another valid option
+                if (sessionSelect.options.length > 0) {
+                    sessionSelect.value = currentActiveSessionId || sessionSelect.options[0].value;
+                    refreshAndDisplayRegistrationReport(sessionSelect.value);
+                } else {
+                    // No sessions left, ensure report is completely hidden
+                    hideDailyReport();
+                }
+
+            } catch (e) {
+                console.error("Error deleting report session:", e);
+                showError("เกิดข้อผิดพลาดในการลบรายงาน โปรดลองอีกครั้ง");
+            } finally {
+                showLoading(false);
+                hideConfirmationModal();
+            }
+        }
+
+
+        // --- Event Listeners ---
+        registerButton.addEventListener('click', registerQueue);
+
+        // Event listener for Question Mark button (opens/closes admin password panel or toggles admin action buttons)
+        toggleAdminPanelButton.addEventListener('click', () => {
+            hideMessages(); 
+            if (adminPanelContainer.style.display === 'flex') { 
+                hideAdminPanel(); 
+                if (isAdminLoggedIn) { // If already logged in, hide admin buttons too when panel is hidden
+                    toggleAdminActionButtons(false);
+                    hideDailyReport(); 
+                }
+            } else { 
+                if (isAdminLoggedIn) { // If already logged in, just toggle visibility of admin buttons
+                    toggleAdminActionButtons(
+                        !document.getElementById('fixedImportButtonContainer').style.display || // Check any of the floating buttons
+                        document.getElementById('fixedImportButtonContainer').style.display === 'none'
+                    );
+                } else { // If not logged in as admin, show the login panel
+                    showAdminPanel();
+                }
+            }
+        });
+
+        // Event listener for Enter key in admin password input (in adminPanelContainer)
+        adminPasswordInput.addEventListener('keyup', async (event) => {
+            if (event.key === 'Enter') {
+                const adminEmail = adminEmailInput.value.trim();
+                const adminPassword = adminPasswordInput.value.trim();
+
+                if (!adminEmail || !adminPassword) {
+                    showPasswordError("กรุณากรอกอีเมลและรหัสผ่าน");
+                    return;
+                }
+
+                hideMessages();
+                showLoading(true);
+
+                try {
+                    const userCredential = await signInWithEmailAndPassword(auth, adminEmail, adminPassword);
+                    const user = userCredential.user;
+
+                    // Check if the authenticated user's UID is in the list of ADMIN_UIDS
+                    if (ADMIN_UIDS.includes(user.uid)) {
+                        isAdminLoggedIn = true;
+                        currentUserId = user.uid; // Update currentUserId to admin's UID
+                        hideAdminPanel();
+                        toggleAdminActionButtons(true);
+                        
+                        adminLoginStatusMessage.textContent = "เข้าสู่ระบบผู้ดูแลระบบสำเร็จ";
+                        adminLoginStatusMessage.classList.add('visible');
+                        setTimeout(() => {
+                            adminLoginStatusMessage.classList.remove('visible');
+                            adminLoginStatusMessage.textContent = '';
+                        }, 3000);
+                        console.log("Admin logged in:", user.uid);
+                    } else {
+                        // If user logs in but is not an ADMIN_UID
+                        showPasswordError("คุณไม่มีสิทธิ์ผู้ดูแลระบบ");
+                        isAdminLoggedIn = false;
+                        toggleAdminActionButtons(false);
+                        hideDailyReport();
+                        // Sign out the non-admin user if they successfully logged into Firebase but are not a designated ADMIN_UID
+                        await signOut(auth); 
+                        console.warn("User logged in but not recognized as Admin UID:", user ? user.uid : 'No user');
+                    }
+                } catch (error) {
+                    console.error("Firebase Login Error:", error.code, error.message);
+                    let errorMessage = "การเข้าสู่ระบบผู้ดูแลระบบล้มเหลว โปรดตรวจสอบรหัสผ่าน";
+                    if (error.code === 'auth/wrong-password' || error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
+                        errorMessage = "อีเมลหรือรหัสผ่านไม่ถูกต้อง";
+                    } else if (error.code === 'auth/too-many-requests') {
+                        errorMessage = "มีจำนวนการพยายามเข้าสู่ระบบมากเกินไป โปรดลองอีกครั้งในภายหลัง";
+                    }
+                    showPasswordError(errorMessage);
+                    isAdminLoggedIn = false;
+                    toggleAdminActionButtons(false);
+                    hideDailyReport();
+                } finally {
+                    showLoading(false);
+                }
+                event.preventDefault();
+            }
+        });
+
+        // Handle click on the Export Button (now inside report section)
+        exportReportButton.addEventListener('click', async () => {
+            hideMessages(); 
+            if (isAdminLoggedIn) { 
+                showLoading(true);
+                exportRegistrationReportToCsv();
+                showLoading(false); 
+            } else {
+                showAdminPanel(); 
+                showPasswordError("กรุณากรอกอีเมลและรหัสผ่านก่อนเข้าถึง"); 
+            }
+        });
+
+        // Handle click on the Import Button (New)
+        toggleImportIdsButton.addEventListener('click', () => {
+            hideMessages(); 
+            if (isAdminLoggedIn) { 
+                hideDailyReport(); 
+                showImportStudentIdsModal(); 
+            } else {
+                showAdminPanel(); 
+                showPasswordError("กรุณากรอกอีเมลและรหัสผ่านก่อนเข้าถึง"); 
+            }
+        });
+
+        // Handle click on the View/Manage Pre-registered Button (New)
+        toggleViewPreRegButton.addEventListener('click', () => {
+            hideMessages(); 
+            if (isAdminLoggedIn) { 
+                hideDailyReport(); 
+                showViewPreRegisteredIdsModal(); 
+            } else {
+                showAdminPanel(); 
+                showPasswordError("กรุณากรอกอีเมลและรหัสผ่านก่อนเข้าถึง"); 
+            }
+        });
+
+        // Handle click on the Daily Report Button (New)
+        toggleDailyReportButton.addEventListener('click', () => {
+            hideMessages(); 
+            if (isAdminLoggedIn) { 
+                if (reportSection.style.display === 'block') { 
+                    hideDailyReport(); 
+                } else {
+                    hideImportStudentIdsModal(); 
+                    hideViewPreRegisteredIdsModal(); 
+                    refreshAndDisplayRegistrationReport(currentActiveSessionId); 
+                }
+            } else {
+                showAdminPanel(); 
+                showPasswordError("กรุณากรอกอีเมลและรหัสผ่านก่อนเข้าถึง"); 
+            }
+        });
+
+        // Handle click on the Close Daily Report Button
+        closeDailyReportButton.addEventListener('click', hideDailyReport);
+
+        // Handle dropdown selection change
+        sessionSelect.addEventListener('change', () => {
+            const selectedSessionId = sessionSelect.value;
+            // Always refresh when the dropdown value changes to ensure correct data is displayed
+            refreshAndDisplayRegistrationReport(selectedSessionId);
+        });
+
+        // Handle click on the Reset Queue Button (now ends session and starts new)
+        resetQueueButton.addEventListener('click', () => {
+            if (!authReady) {
+                showError("ระบบยังไม่พร้อม โปรดรอสักครู่และลองอีกครั้ง");
+                return;
+            }
+            hideMessages(); 
+            if (isAdminLoggedIn) { 
+                showConfirmationModal("คุณแน่ใจหรือไม่ที่ต้องการเริ่มต้นรอบคิวใหม่?", async () => { // Modified message
+                    await endCurrentSessionAndStartNew();
+                    hideDailyReport(); 
+                }, "ยืนยัน"); // Require "ยืนยัน" for confirmation
+            } else {
+                showAdminPanel(); 
+                showPasswordError("กรุณากรอกอีเมลและรหัสผ่านก่อนเข้าถึง"); 
+            }
+        });
+
+        // Handle click on the Delete Report Button (NEW)
+        deleteReportButton.addEventListener('click', () => {
+            if (!isAdminLoggedIn) {
+                showAdminPanel();
+                showPasswordError("กรุณากรอกอีเมลและรหัสผ่านก่อนเข้าถึง");
+                return;
+            }
+            const selectedSessionId = sessionSelect.value;
+            if (!selectedSessionId) {
+                showError("โปรดเลือกรอบรายงานที่ต้องการลบ");
+                return;
+            }
+
+            // Prevent deleting the current active session via this button
+            if (selectedSessionId === currentActiveSessionId) {
+                showError("ไม่สามารถลบรอบคิวปัจจุบันได้ โปรดใช้ปุ่ม 'รีเซ็ตคิว' หากต้องการเริ่มรอบใหม่");
+                return;
+            }
+
+            // Find the session name for confirmation message
+            const selectedOptionText = sessionSelect.options[sessionSelect.selectedIndex].textContent;
+            showConfirmationModal(
+                `คุณแน่ใจหรือไม่ที่ต้องการลบรายงานรอบ: "${selectedOptionText}"? การดำเนินการนี้ไม่สามารถย้อนกลับได้`,
+                async () => {
+                    await deleteReportSession(selectedSessionId);
+                },
+                "ยืนยันการลบ" // Require this text for confirmation
+            );
+        });
+
+        // NEW: Handle click on Toggle Form Visibility Button
+        toggleFormVisibilityButton.addEventListener('click', async () => {
+            if (!isAdminLoggedIn) {
+                showAdminPanel();
+                showPasswordError("กรุณากรอกอีเมลและรหัสผ่านก่อนเข้าถึง");
+                return;
+            }
+            
+            showLoading(true);
+            hideMessages();
+
+            try {
+                const queueMetadataRef = doc(db, `artifacts/${appId}/public/data/queueMetadata`, 'currentQueue');
+                const docSnap = await getDoc(queueMetadataRef);
+                let currentStatus = true;
+                if (docSnap.exists()) {
+                    currentStatus = docSnap.data().isRegistrationFormOpen !== undefined ? docSnap.data().isRegistrationFormOpen : true;
+                }
+
+                const newStatus = !currentStatus;
+                await setDoc(queueMetadataRef, { isRegistrationFormOpen: newStatus }, { merge: true });
+
+                // Manually update the UI since onSnapshot is removed for this feature
+                updateFormUI(newStatus);
+
+                showMessage(`ฟอร์มลงทะเบียน: ${newStatus ? 'เปิด' : 'ปิด'} แล้ว`);
+            } catch (e) {
+                console.error("Error toggling form visibility:", e);
+                showError("เกิดข้อผิดพลาดในการเปลี่ยนสถานะฟอร์ม โปรดลองอีกครั้ง");
+            } finally {
+                showLoading(false);
+            }
+        });
+
+
+        // Add an event listener to the password input itself to hide the error when user types
+        adminPasswordInput.addEventListener('input', () => {
+            passwordErrorDisplay.classList.add('hidden'); 
+        });
+        // Add an event listener to the email input itself to hide the error when user types
+        adminEmailInput.addEventListener('input', () => {
+            passwordErrorDisplay.classList.add('hidden'); 
+        });
+
+        // Import Modal Button Listeners
+        confirmImportIdsButton.addEventListener('click', savePreRegisteredIds);
+        cancelImportIdsButton.addEventListener('click', hideImportStudentIdsModal);
+
+        // Event listener for preRegisteredIdsTextareaModal to clear error on input
+        preRegisteredIdsTextareaModal.addEventListener('input', () => {
+            preRegSaveErrorDisplayModal.classList.add('hidden');
+        });
+
+        // View/Manage Pre-registered Modal Button Listeners
+        closeViewPreRegModalButton.addEventListener('click', hideViewPreRegisteredIdsModal);
+
+        // Select All checkbox listener
+        selectAllPreRegIdsCheckbox.addEventListener('change', (event) => {
+            const isChecked = event.target.checked;
+            preRegisteredIdsTableBody.querySelectorAll('.pre-reg-checkbox').forEach(checkbox => {
+                checkbox.checked = isChecked;
+            });
+            updateDeleteSelectedButtonState();
+        });
+
+        // Delete Selected button listener (Re-added)
+        deleteSelectedPreRegisteredIdsButton.addEventListener('click', () => {
+            if (!isAdminLoggedIn) { // Check admin login status
+                showAdminPanel();
+                showPasswordError("คุณไม่มีสิทธิ์ดำเนินการนี้"); // Changed error message
+                return;
+            }
+            if (selectedPreRegIdsForDeletion.size > 0) {
+                showConfirmationModal(
+                    `คุณแน่ใจหรือไม่ที่ต้องการลบนักศึกษาที่เลือกจำนวน ${selectedPreRegIdsForDeletion.size} รายการ? การดำเนินการนี้ไม่สามารถย้อนกลับได้`,
+                    async () => { // Added confirmation message
+                        await deleteSelectedPreRegisteredIds(selectedPreRegIdsForDeletion);
+                        hideViewPreRegisteredIdsModal(); 
+                    },
+                    "ยืนยันการลบ" // Require this text for confirmation
+                );
+            } else {
+                showMessage("โปรดเลือกรหัสนักศึกษาที่ต้องการลบก่อน");
+            }
+        });
+
+        // NEW: Event listener for the search input in the pre-registered IDs modal
+        preRegSearchInput.addEventListener('input', () => {
+            renderPreRegisteredIdsTable(preRegSearchInput.value.trim());
+        });
+    </script>
+</body>
+</html>
