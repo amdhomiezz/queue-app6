@@ -1789,14 +1789,30 @@ const firebaseConfig = {
                 ].join(',');
             });
 
-            // Determine filename based on selected session or current date
-            let filename = `รายงานลำดับผู้เรียน_${getCurrentDate()}.csv`;
+            // กำหนดค่า default เป็น start date + start time ของวันนี้
+            const now = new Date();
+            const defaultDateTime = now.toLocaleString('th-TH', { 
+                year: 'numeric', 
+                month: '2-digit', 
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            }).replace(/[/: ]/g, '-'); // แทนที่ตัวอักษรที่ใช้ไม่ได้ในชื่อไฟล์
+            
+            let filename = `V6_รายงานรอบปัจจุบัน_${defaultDateTime}.csv`;
+            
             if (sessionSelect.value && sessionSelect.value !== currentActiveSessionId) {
                 const selectedSession = sessionSummaries.find(s => s.sessionId === sessionSelect.value);
-                if (selectedSession && selectedSession.startTime && selectedSession.endTime) {
-                    const start = selectedSession.startTime.toDate().toLocaleString('th-TH', { year: 'numeric', month: '2-digit', day: '2-digit' });
-                    const end = selectedSession.endTime.toDate().toLocaleString('th-TH', { year: 'numeric', month: '2-digit', day: '2-digit' });
-                    filename = `รายงานลำดับผู้เรียน_รอบ_${start}-${end}.csv`;
+                if (selectedSession && selectedSession.startTime) {
+                    const startDateTime = selectedSession.startTime.toDate().toLocaleString('th-TH', { 
+                        year: 'numeric', 
+                        month: '2-digit', 
+                        day: '2-digit',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    }).replace(/[/: ]/g, '-');
+                    
+                    filename = `V6_รายงานย้อนหลัง_${startDateTime}.csv`;
                 }
             }
 
